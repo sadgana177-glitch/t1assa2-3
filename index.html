@@ -1,0 +1,504 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>تحليل ثلاثية الحدود</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style id="css">
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Reem+Kufi:wght@500;600;700&display=swap');
+/* Layout: grid-paper notebook. A tile-colored hero over a two-column gate (password | contact links), then a tabbed workspace. */
+:root{
+  --bg:#f3f6fb; --paper:#ffffff; --ink:#12213a; --muted:#51627d; --line:#d3dcea;
+  --brand:#1d4f91; --brand-ink:#ffffff; --brand-soft:#e2ecf9;
+  --t2:#8fd0ef; --t1:#8bcb8a; --t0:#f4e56a; --tile-ink:#10223a;
+  --ok:#14763f; --ok-soft:#dcf2e4; --bad:#b0352a; --bad-soft:#fbe4e0;
+  --grid:rgba(29,79,145,.07);
+  --fd:'Reem Kufi','Cairo','Tahoma',sans-serif;
+  --fb:'IBM Plex Sans Arabic','Tajawal','Segoe UI','Tahoma',sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0d1522; --paper:#162235; --ink:#e8eff9; --muted:#a0b2ca; --line:#2a3b54;
+    --brand:#7fb4ff; --brand-ink:#0b1b33; --brand-soft:#1d3253;
+    --ok:#5bd491; --ok-soft:#13362a; --bad:#ff8c7c; --bad-soft:#42211d;
+    --grid:rgba(127,180,255,.06); color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0d1522; --paper:#162235; --ink:#e8eff9; --muted:#a0b2ca; --line:#2a3b54;
+  --brand:#7fb4ff; --brand-ink:#0b1b33; --brand-soft:#1d3253;
+  --ok:#5bd491; --ok-soft:#13362a; --bad:#ff8c7c; --bad-soft:#42211d;
+  --grid:rgba(127,180,255,.06); color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{
+  background-color:var(--bg);
+  background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+  background-size:26px 26px;
+  color:var(--ink); font-family:var(--fb); font-size:16px; line-height:1.75;
+}
+#app{min-height:100vh}
+.wrap{max-width:1040px;margin:0 auto;padding-block:20px 56px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+h1,h2,h3{font-family:var(--fd);margin:0;line-height:1.35;text-wrap:balance}
+p{margin:0}
+.e{unicode-bidi:isolate;direction:rtl;white-space:nowrap;font-weight:600}
+.e sup{font-size:.72em;line-height:0;vertical-align:super}
+.muted{color:var(--muted)}
+:focus-visible{outline:3px solid var(--brand);outline-offset:2px}
+button{font-family:inherit;font-size:inherit;color:inherit;cursor:pointer}
+
+/* hero */
+.hero{display:grid;gap:6px;justify-items:start;padding-block:18px 22px}
+.tiles-mark{display:flex;gap:6px;margin-bottom:6px}
+.tiles-mark i{display:block;border:2px solid rgba(16,34,58,.4);border-radius:3px}
+.tiles-mark .m2{width:34px;height:34px;background:var(--t2)}
+.tiles-mark .m1{width:14px;height:34px;background:var(--t1)}
+.tiles-mark .m0{width:14px;height:14px;background:var(--t0);align-self:flex-end}
+.grade{display:inline-block;background:var(--brand);color:var(--brand-ink);font-family:var(--fd);font-weight:700;font-size:1.35rem;padding:2px 16px;border-radius:8px}
+.kicker{color:var(--muted);font-weight:600}
+.hero h1{font-size:clamp(1.9rem,6vw,3.1rem);font-weight:700}
+.form-line{font-size:1.15rem}
+.byline{color:var(--muted);font-weight:500}
+
+/* cards, buttons, inputs */
+.card{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:20px;min-width:0}
+.card h2{font-size:1.35rem;margin-bottom:6px}
+label{display:block;font-weight:600;margin:14px 0 6px}
+input[type=text],input[type=password]{width:100%;min-width:0;font:inherit;color:var(--ink);background:var(--bg);border:1.5px solid var(--line);border-radius:10px;padding:10px 14px}
+.row{display:flex;gap:10px;align-items:stretch}
+.btn{background:var(--brand);color:var(--brand-ink);border:0;border-radius:10px;padding:10px 22px;font-weight:700;white-space:nowrap}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.ghost{background:transparent;border:1.5px solid var(--line);border-radius:10px;padding:8px 14px;font-weight:600;display:inline-flex;gap:8px;align-items:center}
+.ghost:hover{border-color:var(--brand)}
+.err{color:var(--bad);font-weight:600;margin-top:8px}
+.okmsg{color:var(--ok);font-weight:600;margin-top:8px}
+
+/* gate */
+.gate{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:20px;align-items:start}
+.gate .ghost{margin-top:18px}
+#tpanel{margin-top:14px;padding-top:14px;border-top:1px dashed var(--line)}
+.links{display:flex;flex-direction:column;gap:10px}
+.link{display:flex;align-items:center;gap:14px;padding:12px 14px;background:var(--paper);border:1px solid var(--line);border-radius:12px;color:inherit;text-decoration:none}
+.link:hover{border-color:var(--brand)}
+.link b{display:block;font-weight:700;line-height:1.4}
+.link small{color:var(--muted);font-size:.9rem}
+.disc{width:46px;height:46px;flex:none;border-radius:50%;display:grid;place-items:center;color:#fff}
+.disc svg{width:24px;height:24px}
+.num{unicode-bidi:isolate;direction:ltr;display:inline-block;font-weight:600}
+
+/* workspace */
+.topbar{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+.brand{font-family:var(--fd);font-weight:700;font-size:1.15rem}
+.tabs{display:flex;gap:8px;margin-bottom:18px}
+.tab{flex:1;padding:12px 10px;border-radius:12px;border:1.5px solid var(--line);background:var(--paper);font-family:var(--fd);font-weight:700;font-size:1.1rem}
+.tab[aria-selected=true]{background:var(--brand);color:var(--brand-ink);border-color:var(--brand)}
+.contact{background:var(--brand-soft);border-radius:12px;padding:12px 16px;margin-bottom:18px;display:grid;gap:6px}
+.cname{display:flex;gap:10px;align-items:center}
+.av{width:32px;height:32px;border-radius:50%;background:var(--brand);color:var(--brand-ink);display:grid;place-items:center;font-weight:700}
+.crow{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+.crow a{color:var(--brand);font-weight:700}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px}
+.chip{padding:6px 14px;border-radius:999px;border:1.5px solid var(--line);background:var(--paper);font-weight:600;font-size:.95rem}
+.chip[aria-current=true]{background:var(--brand);color:var(--brand-ink);border-color:var(--brand)}
+.lesson h2{font-size:1.5rem;margin-bottom:4px}
+.big{font-size:1.5rem;margin:8px 0 14px}
+.step{background:var(--paper);border:1px solid var(--line);border-inline-start:5px solid var(--brand);border-radius:12px;padding:14px 18px;margin-bottom:12px;min-width:0}
+.step h3{font-size:1.05rem;margin-bottom:4px;color:var(--brand)}
+.stepbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:14px 0}
+.dots{display:flex;gap:6px}
+.dots i{width:10px;height:10px;border-radius:50%;background:var(--line)}
+.dots i.on{background:var(--brand)}
+.tries{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}
+.try{padding:6px 12px;border-radius:10px;border:1.5px solid var(--line);background:var(--bg)}
+.try.ok{border-color:var(--ok);background:var(--ok-soft)}
+.try.bad{border-color:var(--bad);background:var(--bad-soft)}
+.tdetail{border-radius:10px;padding:10px 14px;display:grid;gap:2px}
+.tdetail.ok{background:var(--ok-soft);color:var(--ok)}
+.tdetail.bad{background:var(--bad-soft);color:var(--bad)}
+.ans{background:var(--ok-soft);color:var(--ok);border-radius:10px;padding:10px 14px;font-size:1.15rem;font-weight:700;margin-top:6px}
+.prac{margin-top:18px}
+.prac h3{font-size:1.1rem;margin-bottom:8px}
+.opts{display:grid;gap:8px}
+.opt{text-align:start;padding:10px 14px;border-radius:10px;border:1.5px solid var(--line);background:var(--paper);display:flex;gap:10px;align-items:center}
+.opt:hover:not(:disabled){border-color:var(--brand)}
+.opt.sel{border-color:var(--brand);background:var(--brand-soft)}
+.opt.ok{border-color:var(--ok);background:var(--ok-soft)}
+.opt.bad{border-color:var(--bad);background:var(--bad-soft)}
+.opt:disabled{cursor:default}
+.why{margin-top:10px;padding:10px 14px;border-radius:10px;background:var(--brand-soft)}
+
+/* algebra tiles */
+.dims{display:grid;grid-template-columns:auto auto;justify-content:center;gap:6px 8px;margin:14px 0;direction:rtl}
+.dtop,.dside{text-align:center;font-weight:700;color:var(--brand);border:2px solid var(--brand);border-radius:6px;padding:2px 6px}
+.dtop{grid-column:2}
+.dside{grid-row:2;grid-column:1;writing-mode:vertical-rl;display:flex;align-items:center;justify-content:center}
+.dtop[hidden],.dside[hidden]{display:none}
+.tiles{--u:min(21vw,92px);--s:calc(var(--u)*.42);grid-column:2;grid-row:2;display:grid;grid-template-columns:repeat(3,var(--u)) var(--s);grid-template-rows:var(--u) var(--s) var(--s);gap:3px}
+.t{display:grid;place-items:center;font-weight:700;font-size:.85rem;color:var(--tile-ink);border:2px solid rgba(16,34,58,.4);border-radius:3px;transition:background .25s}
+.t.x2{background:var(--t2)} .t.x{background:var(--t1)} .t.o{background:var(--t0)}
+.t.empty{background:transparent;border:2px dashed var(--line);color:transparent}
+.legend{display:flex;flex-wrap:wrap;gap:14px;margin:6px 0 2px}
+.legend span{display:inline-flex;align-items:center;gap:8px}
+.legend i{width:20px;height:20px;border-radius:3px;border:2px solid rgba(16,34,58,.4);display:inline-block}
+
+/* quiz */
+.qhead{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:8px;flex-wrap:wrap}
+.bar{height:8px;border-radius:99px;background:var(--line);overflow:hidden;margin-bottom:16px}
+.bar i{display:block;height:100%;background:var(--brand)}
+.qtext{font-size:1.25rem;font-family:var(--fd);margin-bottom:14px}
+.score{font-family:var(--fd);font-size:3rem;font-weight:700;color:var(--brand)}
+.rev{border:1px solid var(--line);border-radius:12px;padding:12px 16px;margin-top:10px;background:var(--paper)}
+.rev.ok{border-inline-start:5px solid var(--ok)} .rev.bad{border-inline-start:5px solid var(--bad)}
+.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+.sum{display:grid;gap:4px;margin:10px 0;padding:12px 16px;border-radius:10px;background:var(--brand-soft)}
+
+@media (max-width:760px){
+  .gate{grid-template-columns:minmax(0,1fr)}
+  .row{flex-wrap:wrap} .row .btn{flex:1}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+<div id="app" dir="rtl" lang="ar"></div>
+<script type="application/json" id="cfg">{"ph":"phu2svv3px"}</script>
+<script id="main">
+(function(){
+'use strict';
+var TITLE='تحليل ثلاثية الحدود';
+var $=function(s,r){return (r||document).querySelector(s);};
+var DIG='٠١٢٣٤٥٦٧٨٩';
+var ar=function(s){return String(s).replace(/[0-9]/g,function(d){return DIG[d];});};
+var toLatin=function(s){return String(s).replace(/[٠-٩]/g,function(d){return DIG.indexOf(d);}).replace(/[۰-۹]/g,function(d){return d.charCodeAt(0)-1776;});};
+var attr=function(u){return String(u).replace(/&/g,'&amp;').replace(/"/g,'&quot;');};
+var esc=function(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');};
+function E(s){return '<span class="e">'+ar(String(s).replace(/\^(\d+)/g,'<sup>$1</sup>'))+'</span>';}
+function ptxt(s){return String(s).charAt(0)==='~'?ar(esc(String(s).slice(1))):E(s);}
+
+/* ---------- password ---------- */
+var CFG={ph:''};
+try{CFG=JSON.parse($('#cfg').textContent);}catch(e){}
+function h53(str){var h1=0xdeadbeef,h2=0x41c6ce57,ch;for(var i=0;i<str.length;i++){ch=str.charCodeAt(i);h1=Math.imul(h1^ch,2654435761);h2=Math.imul(h2^ch,1597334677);}
+  h1=Math.imul(h1^(h1>>>16),2246822507);h1^=Math.imul(h2^(h2>>>13),3266489909);
+  h2=Math.imul(h2^(h2>>>16),2246822507);h2^=Math.imul(h1^(h1>>>13),3266489909);
+  return (4294967296*(2097151&h2)+(h1>>>0)).toString(36);}
+function hashPw(v){return h53('tahlil9|'+toLatin(v).trim().toLowerCase());}
+function sget(k){try{return sessionStorage.getItem(k);}catch(e){return null;}}
+function sset(k,v){try{sessionStorage.setItem(k,v);}catch(e){}}
+function sdel(k){try{sessionStorage.removeItem(k);}catch(e){}}
+
+/* ---------- contacts ---------- */
+var ICONS={
+ phone:'<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M6.6 10.8c1.4 2.8 3.8 5.1 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1C10.6 21 3 13.4 3 4c0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.3 0 .7-.2 1z"/></svg>',
+ tg:'<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M21.5 3.5 2.8 10.7c-.9.4-.9 1.1-.2 1.3l4.8 1.5 1.8 5.7c.2.6.4.8.9.8.4 0 .6-.2.9-.5l2.3-2.3 4.7 3.5c.9.5 1.5.2 1.7-.8l3.1-14.6c.3-1.2-.4-1.7-1.3-1.3z" transform="translate(-1.5 0) scale(.95)"/></svg>',
+ ig:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3.5" y="3.5" width="17" height="17" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.2" cy="6.8" r="1.1" fill="currentColor" stroke="none"/></svg>',
+ com:'<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="12" cy="7.5" r="3.2"/><circle cx="5" cy="9.5" r="2.4"/><circle cx="19" cy="9.5" r="2.4"/><path d="M6.2 20c0-3.6 2.6-6 5.8-6s5.8 2.4 5.8 6z"/><path d="M1.5 18c0-2.4 1.4-4.2 3.5-4.4-.7.9-1.1 2-1.2 3.2.1.4.2.8.4 1.2z"/><path d="M22.5 18c0-2.4-1.4-4.2-3.5-4.4.7.9 1.1 2 1.2 3.2-.1.4-.2.8-.4 1.2z"/></svg>',
+ key:'<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="8" cy="15" r="4"/><path d="M11 12l9-9M17 6l3 3M14 9l2 2"/></svg>'
+};
+var LINKS=[
+ {c:'#1a9a4f',ic:'phone',t:'للاستفسار',s:'+96569943365',u:'https://wa.me/96569943365',num:true},
+ {c:'#2688c4',ic:'tg',t:'انضم هنا للمزيد من الملفات',s:'مجموعة تيليجرام',u:'https://t.me/+pjyOcLAg1NY3ZTRk'},
+ {c:'#c13584',ic:'ig',t:'للمزيد من الاختبارات',s:'تابعنا على انستجرام',u:'https://www.instagram.com/seddd.ra?avpt=MWhodWRzcWlseTE5cQ%3D%3D&utm_source=qr'},
+ {c:'#0f8a7a',ic:'com',t:'انضم إلى مجتمع الواتس آب',s:'مجتمع الواتس آب',u:'https://chat.whatsapp.com/EvF5xxo70IkLfv2zuS9FWO'}
+];
+function contactHTML(both){
+  return '<aside class="contact"><div class="cname"><span class="av" aria-hidden="true">م</span><strong>مهندسة الرياضيات</strong></div>'+
+   (both?'<div class="crow"><span class="num">+96569943365</span><a href="https://wa.me/96569943365" target="_blank" rel="noopener noreferrer">للتواصل اضغط هنا</a></div>':'')+
+   '<div class="crow"><span class="num">+٢٠١٠٢٣٠٨٣٢٢٧</span><a href="https://wa.me/message/3SK6HSHQFVALJ1" target="_blank" rel="noopener noreferrer">للتواصل اضغط هنا</a></div></aside>';
+}
+
+/* ---------- lesson data ---------- */
+var TS=[
+ 'الحدودية '+E('3س^2 + 7س + 2')+' تحتاج ٣ بطاقات من س² (أزرق)، و٧ بطاقات من س (أخضر)، وبطاقتين من ١ (أصفر).',
+ 'نضع بطاقات س² الثلاث في الزاوية على شكل صف واحد.',
+ 'بما أن ٢ عدد أولي، نرتب بطاقتي ١ في مصفوفة ١ × ٢ ونضعهما في الزاوية المقابلة.',
+ 'نكمل المستطيل ببطاقات س، فيلزمنا ٧ بطاقات بالضبط، وهذا هو الحد الأوسط.',
+ 'نقرأ الأبعاد: الطول = '+E('3س + 1')+' والعرض = '+E('س + 2')+'. إذن '+E('3س^2 + 7س + 2 = (3س + 1)(س + 2)')+'.'
+];
+var EX=[
+ {tab:'مثال توضيحي',q:'3س^2 − 14س + 8',mid:'−14س',
+  steps:[
+   {t:'حلّل الحدّ الأول والأخير',h:'الحد الأول '+E('3س^2')+' عوامله '+E('3س ، س')+'.<br>الحد الأخير '+E('+8')+' موجب والحد الأوسط '+E('−14س')+' سالب، لذلك عاملا ٨ سالبان: '+E('(−1 ، −8)')+' أو '+E('(−2 ، −4)')+'.'},
+   {t:'جرّب المحاولات',try:true,h:'اضغط على كل محاولة لترى حاصل جمع الضرب التبادلي.'},
+   {t:'الناتج',h:'المحاولة الثالثة صحيحة، ولم نحتج إلى بقية المحاولات.',ans:'3س^2 − 14س + 8 = (3س − 2)(س − 4)'},
+   {t:'تحقّق بالضرب',h:E('(3س − 2)(س − 4) = 3س^2 − 12س − 2س + 8 = 3س^2 − 14س + 8')+' ✓'}],
+  tries:[
+   {f:'(3س − 1)(س − 8)',calc:'3س × (−8) + (−1) × س',mid:'−25س',ok:false},
+   {f:'(3س − 8)(س − 1)',calc:'3س × (−1) + (−8) × س',mid:'−11س',ok:false},
+   {f:'(3س − 2)(س − 4)',calc:'3س × (−4) + (−2) × س',mid:'−14س',ok:true}],
+  prac:{qh:'حلّل: '+E('2س^2 + 7س + 3'),o:['(2س + 3)(س + 1)','(2س + 1)(س + 3)','(2س + 1)(س − 3)','(2س − 3)(س − 1)'],c:1,why:'الحد الأوسط = '+E('2س × 3 + 1 × س = 7س')+'.'}},
+ {tab:'الحد الأخير سالب',q:'5س^2 + 6س − 8',mid:'6س',
+  steps:[
+   {t:'حلّل الحدّ الأول والأخير',h:'الحد الأول '+E('5س^2')+' عوامله '+E('5س ، س')+'.<br>الحد الأخير '+E('−8')+' سالب، فعاملاه مختلفا الإشارة: '+E('(1 ، −8)')+' و'+E('(2 ، −4)')+' و'+E('(4 ، −2)')+' و'+E('(8 ، −1)')+' وعكسها.'},
+   {t:'جرّب المحاولات',try:true,h:'لاحظ: إذا أعطتك المحاولة الحد الأوسط بإشارة معاكسة، بدّل إشارتي العاملين.'},
+   {t:'الناتج',h:'الحد الأوسط المطلوب '+E('+6س')+' ظهر في المحاولة الثالثة.',ans:'5س^2 + 6س − 8 = (5س − 4)(س + 2)'},
+   {t:'تحقّق بالضرب',h:E('(5س − 4)(س + 2) = 5س^2 + 10س − 4س − 8 = 5س^2 + 6س − 8')+' ✓'}],
+  tries:[
+   {f:'(5س + 2)(س − 4)',calc:'5س × (−4) + 2 × س',mid:'−18س',ok:false},
+   {f:'(5س − 2)(س + 4)',calc:'5س × 4 + (−2) × س',mid:'18س',ok:false},
+   {f:'(5س − 4)(س + 2)',calc:'5س × 2 + (−4) × س',mid:'6س',ok:true}],
+  prac:{qh:'حلّل: '+E('3س^2 − 5س − 2'),o:['(3س − 1)(س + 2)','(3س + 2)(س − 1)','(3س + 1)(س − 2)','(3س − 2)(س + 1)'],c:2,why:E('3س × (−2) + 1 × س = −6س + س = −5س')+'.'}},
+ {tab:'متغيّران',q:'8س^2 − 14س ص + 3ص^2',mid:'−14س ص',
+  steps:[
+   {t:'حلّل الحدّ الأول والأخير',h:'الحد الأول '+E('8س^2')+' عوامله '+E('8س ، س')+' أو '+E('4س ، 2س')+'.<br>الحد الأخير '+E('+3ص^2')+' موجب والأوسط سالب، فعاملاه '+E('−ص ، −3ص')+'.'},
+   {t:'جرّب المحاولات',try:true,h:'نجرّب العوامل الممكنة حتى نصل إلى الحد الأوسط المطلوب.'},
+   {t:'الناتج',h:'المحاولة الثالثة صحيحة.',ans:'8س^2 − 14س ص + 3ص^2 = (4س − ص)(2س − 3ص)'},
+   {t:'تحقّق بالضرب',h:E('(4س − ص)(2س − 3ص) = 8س^2 − 12س ص − 2س ص + 3ص^2 = 8س^2 − 14س ص + 3ص^2')+' ✓'}],
+  tries:[
+   {f:'(8س − ص)(س − 3ص)',calc:'8س × (−3ص) + (−ص) × س',mid:'−25س ص',ok:false},
+   {f:'(8س − 3ص)(س − ص)',calc:'8س × (−ص) + (−3ص) × س',mid:'−11س ص',ok:false},
+   {f:'(4س − ص)(2س − 3ص)',calc:'4س × (−3ص) + (−ص) × 2س',mid:'−14س ص',ok:true}],
+  prac:{qh:'حلّل: '+E('6س^2 + 11س ص + 3ص^2'),o:['(6س + ص)(س + 3ص)','(3س + ص)(2س + 3ص)','(3س + 3ص)(2س + ص)','(6س + 3ص)(س + ص)'],c:1,why:E('3س × 3ص + ص × 2س = 9س ص + 2س ص = 11س ص')+'.'}},
+ {tab:'عامل مشترك عددي',q:'18س^2 + 30س + 12',mid:'5س',
+  steps:[
+   {t:'ابحث عن عامل مشترك',h:'الأعداد '+E('18 ، 30 ، 12')+' يقبل كلٌّ منها القسمة على ٦، فنخرجه أولاً:<br>'+E('18س^2 + 30س + 12 = 6(3س^2 + 5س + 2)')},
+   {t:'حلّل ما بين القوسين',try:true,h:'نحلّل '+E('3س^2 + 5س + 2')+': الحد الأول عوامله '+E('3س ، س')+' والأخير عوامله '+E('1 ، 2')+'. الحد الأوسط المطلوب '+E('5س')+'.'},
+   {t:'الناتج',h:'لا تنسَ كتابة العامل المشترك ٦ في الناتج.',ans:'18س^2 + 30س + 12 = 6(3س + 2)(س + 1)'},
+   {t:'تحقّق بالضرب',h:E('6(3س + 2)(س + 1) = 6(3س^2 + 5س + 2) = 18س^2 + 30س + 12')+' ✓'}],
+  tries:[
+   {f:'(3س + 1)(س + 2)',calc:'3س × 2 + 1 × س',mid:'7س',ok:false},
+   {f:'(3س + 2)(س + 1)',calc:'3س × 1 + 2 × س',mid:'5س',ok:true}],
+  prac:{qh:'حلّل تحليلاً تاماً: '+E('12ع^2 − 20ع − 8'),o:['4(3ع − 1)(ع + 2)','(12ع + 4)(ع − 2)','4(3ع + 1)(ع − 2)','4(3ع + 2)(ع − 1)'],c:2,why:'نخرج ٤: '+E('4(3ع^2 − 5ع − 2) = 4(3ع + 1)(ع − 2)')+'. الخيار الثاني ضربه صحيح لكنه غير تام، لأن '+E('(12ع + 4)')+' فيه عامل مشترك ٤.'}},
+ {tab:'عامل مشترك متغيّر',q:'2ع^3 + 7ع^2 − 15ع',mid:'7ع',
+  steps:[
+   {t:'ابحث عن عامل مشترك',h:'كل حد يحتوي على ع، فنخرجها أولاً:<br>'+E('2ع^3 + 7ع^2 − 15ع = ع(2ع^2 + 7ع − 15)')},
+   {t:'حلّل ما بين القوسين',try:true,h:'نحلّل '+E('2ع^2 + 7ع − 15')+': الحد الأوسط المطلوب '+E('7ع')+'.'},
+   {t:'الناتج',h:'نكتب العامل المشترك ع أمام العاملين.',ans:'2ع^3 + 7ع^2 − 15ع = ع(2ع − 3)(ع + 5)'},
+   {t:'تحقّق بالضرب',h:E('ع(2ع − 3)(ع + 5) = ع(2ع^2 + 10ع − 3ع − 15) = 2ع^3 + 7ع^2 − 15ع')+' ✓'}],
+  tries:[
+   {f:'(2ع + 5)(ع − 3)',calc:'2ع × (−3) + 5 × ع',mid:'−ع',ok:false},
+   {f:'(2ع − 5)(ع + 3)',calc:'2ع × 3 + (−5) × ع',mid:'ع',ok:false},
+   {f:'(2ع − 3)(ع + 5)',calc:'2ع × 5 + (−3) × ع',mid:'7ع',ok:true}],
+  prac:{qh:'حلّل تحليلاً تاماً: '+E('3ك^3 − 10ك^2 + 8ك'),o:['ك(3ك − 2)(ك − 4)','(3ك − 4)(ك − 2)','ك(3ك + 4)(ك + 2)','ك(3ك − 4)(ك − 2)'],c:3,why:E('ك(3ك^2 − 10ك + 8) = ك(3ك − 4)(ك − 2)')+'، والخيار الثاني نسي العامل المشترك ك.'}},
+ {tab:'تحدٍّ',bmode:true,q:'3س^2 + ب س + 4',mid:'',
+  steps:[
+   {t:'المطلوب',h:'أوجد قيمتين للمعامل ب تسمحان بتحليل '+E('3س^2 + ب س + 4')+'.'},
+   {t:'جرّب العوامل الممكنة',try:true,h:'عوامل '+E('3س^2')+': '+E('3س ، س')+'. عوامل '+E('4')+': '+E('(1 ، 4)')+' و'+E('(2 ، 2)')+' و'+E('(4 ، 1)')+' وكذلك السالبة. كل محاولة تعطي قيمة لـ ب.'},
+   {t:'الناتج',h:'كل محاولة سمحت بالتحليل، فهذه كل قيم ب الممكنة.',ans:'ب = ±7 ، ±8 ، ±13'},
+   {t:'تحقّق',h:'مثلاً عند ب = ٧: '+E('(3س + 4)(س + 1) = 3س^2 + 3س + 4س + 4 = 3س^2 + 7س + 4')+' ✓'}],
+  tries:[
+   {f:'(3س + 1)(س + 4)',calc:'3س × 4 + 1 × س',mid:'13'},
+   {f:'(3س + 4)(س + 1)',calc:'3س × 1 + 4 × س',mid:'7'},
+   {f:'(3س + 2)(س + 2)',calc:'3س × 2 + 2 × س',mid:'8'},
+   {f:'(3س − 1)(س − 4)',calc:'3س × (−4) + (−1) × س',mid:'−13'},
+   {f:'(3س − 4)(س − 1)',calc:'3س × (−1) + (−4) × س',mid:'−7'},
+   {f:'(3س − 2)(س − 2)',calc:'3س × (−2) + (−2) × س',mid:'−8'}],
+  prac:{qh:'أي قيمة لـ ب تسمح بتحليل '+E('2س^2 + ب س + 6')+'؟',o:['~ب = 9','~ب = 10','~ب = 7','~ب = 11'],c:2,why:E('(2س + 3)(س + 2) = 2س^2 + 7س + 6')+'، أما ٩ و١٠ و١١ فلا يمكن الوصول إليها.'}}
+];
+EX.forEach(function(d){d.tries.forEach(function(t){if(d.bmode)t.ok=true;});});
+
+var QZ=[
+ {q:'عند تحليل '+E('3س^2 + 10س + 3 = (3س + 1)(س + 3)')+' أي ناتج ضرب تبادلي يعطي الحد الأوسط '+E('10س')+'؟',o:['3س × 3 + 1 × س','3س × 1 + 3 × س','3س × س + 1 × 3','3س × 3 − 1 × س'],c:0,why:'الحد الأوسط = '+E('3س × 3 + 1 × س = 9س + س = 10س')+'.'},
+ {q:'حلّل: '+E('2س^2 + 9س + 4'),o:['(2س + 1)(س + 4)','(2س + 4)(س + 1)','(2س − 1)(س − 4)','(2س + 2)(س + 2)'],c:0,why:E('2س × 4 + 1 × س = 9س')+'.'},
+ {q:'حلّل: '+E('3س^2 + 10س + 8'),o:['(3س + 2)(س + 4)','(3س + 4)(س + 2)','(3س + 8)(س + 1)','(3س + 1)(س + 8)'],c:1,why:E('3س × 2 + 4 × س = 6س + 4س = 10س')+'.'},
+ {q:'حلّل: '+E('5س^2 − 13س + 6'),o:['(5س − 2)(س − 3)','(5س − 6)(س − 1)','(5س − 3)(س − 2)','(5س + 3)(س + 2)'],c:2,why:E('5س × (−2) + (−3) × س = −10س − 3س = −13س')+'.'},
+ {q:'حلّل: '+E('4س^2 − 4س − 15'),o:['(2س − 3)(2س + 5)','(2س + 3)(2س − 5)','(4س + 3)(س − 5)','(4س − 5)(س + 3)'],c:1,why:E('2س × (−5) + 3 × 2س = −10س + 6س = −4س')+'.'},
+ {q:'حلّل: '+E('7س^2 + 3س − 4'),o:['(7س + 4)(س − 1)','(7س − 1)(س + 4)','(7س + 1)(س − 4)','(7س − 4)(س + 1)'],c:3,why:E('7س × 1 + (−4) × س = 7س − 4س = 3س')+'.'},
+ {q:'حلّل: '+E('10س^2 + 21س ص + 9ص^2'),o:['(10س + 3ص)(س + 3ص)','(5س + 9ص)(2س + ص)','(5س + 3ص)(2س + 3ص)','(5س + ص)(2س + 9ص)'],c:2,why:E('5س × 3ص + 3ص × 2س = 15س ص + 6س ص = 21س ص')+'.'},
+ {q:'حلّل تحليلاً تاماً: '+E('12س^2 + 14س − 10'),o:['(6س + 10)(2س − 1)','2(3س − 5)(2س + 1)','2(3س + 5)(2س − 1)','2(6س + 5)(س − 1)'],c:2,why:'نخرج ٢ أولاً: '+E('2(6س^2 + 7س − 5) = 2(3س + 5)(2س − 1)')+'. الخيار الأول ضربه صحيح لكنه غير تام، لأن '+E('(6س + 10)')+' فيه عامل مشترك ٢.'},
+ {q:'حلّل تحليلاً تاماً: '+E('4ع^3 + 10ع^2 + 4ع'),o:['ع(2ع + 1)(2ع + 4)','2ع(2ع + 2)(ع + 1)','2(2ع + 1)(ع + 2)','2ع(2ع + 1)(ع + 2)'],c:3,why:'العامل المشترك الأكبر '+E('2ع')+': '+E('2ع(2ع^2 + 5ع + 2) = 2ع(2ع + 1)(ع + 2)')+'.'},
+ {q:'أي قيمة لـ ب تجعل '+E('3س^2 + ب س + 5')+' قابلة للتحليل؟',o:['~ب = 9','~ب = 10','~ب = 8','~ب = 11'],c:2,why:E('(3س + 5)(س + 1) = 3س^2 + 8س + 5')+'، أما ٩ و١٠ و١١ فلا يمكن تحليلها.'}
+];
+
+/* ---------- state ---------- */
+var S={view:'gate',tab:'learn',lesson:0,ts:0,st:{},pk:{},pr:{}};
+var Q={phase:'start',name:'',i:0,perm:[],ans:[],sel:-1};
+var T={canEdit:false,art:null,ready:false};
+
+/* ---------- views ---------- */
+function gateHTML(){
+  var links=LINKS.map(function(l){
+    return '<a class="link" href="'+attr(l.u)+'" target="_blank" rel="noopener noreferrer"><span class="disc" style="background:'+l.c+'">'+ICONS[l.ic]+'</span><span><b>'+l.t+'</b><small'+(l.num?' class="num"':'')+'>'+l.s+'</small></span></a>';
+  }).join('');
+  return '<div class="wrap"><header class="hero"><div class="tiles-mark" aria-hidden="true"><i class="m2"></i><i class="m1"></i><i class="m0"></i></div>'+
+   '<p class="grade">الصف التاسع 9</p><p class="kicker">الدرس الثالث</p><h1>تحليل ثلاثية الحدود</h1>'+
+   '<p class="form-line">'+E('أ س^2 + ب س + جـ')+' ، حيث '+E('أ ≠ 1')+'</p><p class="byline">مهندسة الرياضيات</p></header>'+
+   '<div class="gate"><section class="card" aria-labelledby="pwl"><h2 id="pwl">ادخل كلمة السر</h2>'+
+   '<p class="muted">اطلب كلمة السر من معلمتك لفتح الشرح التفاعلي والاختبار.</p>'+
+   '<label for="pw">كلمة السر</label><div class="row"><input id="pw" type="password" autocomplete="off"><button class="btn" data-act="login">دخول</button></div>'+
+   '<p id="perr" class="err" role="alert" hidden></p>'+
+   '<button class="ghost" data-act="teacher">'+ICONS.key+' خيارات المعلمة</button>'+
+   '<div id="tpanel" hidden></div></section>'+
+   '<nav class="links" aria-label="روابط التواصل">'+links+'</nav></div></div>';
+}
+function teacherPanel(){
+  if(!T.ready)return '<p class="muted">جارٍ التحقق من الصلاحية...</p>';
+  if(!T.canEdit)return '<p class="muted">تغيير كلمة السر متاح لصاحبة الصفحة فقط. افتحي الصفحة من حسابك على Claude ثم اضغطي هذا الزر.</p>';
+  return '<label for="np1">كلمة السر الجديدة</label><input id="np1" type="text" autocomplete="off">'+
+   '<label for="np2">أعيدي كتابة الكلمة الجديدة</label><input id="np2" type="text" autocomplete="off">'+
+   '<p class="muted" style="margin-top:6px">٤ خانات على الأقل. بعد الحفظ يحتاج كل الطلاب إلى الكلمة الجديدة.</p>'+
+   '<div class="actions"><button class="btn" data-act="tsave">حفظ كلمة السر</button></div><p id="tmsg" role="status"></p>';
+}
+function appHTML(){
+  return '<div class="wrap"><div class="topbar"><div class="brand">الصف التاسع 9 · تحليل ثلاثية الحدود</div><button class="ghost" data-act="lock">قفل</button></div>'+
+   '<div class="tabs" role="tablist"><button class="tab" role="tab" aria-selected="'+(S.tab==='learn')+'" data-act="tab" data-v="learn">شرح تفاعلي</button>'+
+   '<button class="tab" role="tab" aria-selected="'+(S.tab==='quiz')+'" data-act="tab" data-v="quiz">الاختبار</button></div>'+
+   (S.tab==='learn'?learnHTML():quizHTML())+'</div>';
+}
+function learnHTML(){
+  var chips='<button class="chip" data-act="lesson" data-i="0" aria-current="'+(S.lesson===0)+'">الفكرة بالبطاقات</button>'+
+   EX.map(function(d,i){return '<button class="chip" data-act="lesson" data-i="'+(i+1)+'" aria-current="'+(S.lesson===i+1)+'">'+ar(i+1)+' · '+d.tab+'</button>';}).join('');
+  var body=S.lesson===0?tilesHTML():exHTML(S.lesson);
+  var nav='<div class="actions">'+(S.lesson>0?'<button class="ghost" data-act="lesson" data-i="'+(S.lesson-1)+'">الدرس السابق</button>':'')+
+   (S.lesson<EX.length?'<button class="btn" data-act="lesson" data-i="'+(S.lesson+1)+'">الدرس التالي</button>':'<button class="btn" data-act="tab" data-v="quiz">انتقل إلى الاختبار</button>')+'</div>';
+  return contactHTML(true)+'<div class="chips" role="group" aria-label="الدروس">'+chips+'</div><section class="lesson">'+body+nav+'</section>';
+}
+function dots(n,k){var s='';for(var i=0;i<n;i++)s+='<i class="'+(i<=k?'on':'')+'"></i>';return '<span class="dots" aria-hidden="true">'+s+'</span>';}
+function tilesHTML(){
+  var st=S.ts,cells=[['x2','x2','x2','x'],['x','x','x','o'],['x','x','x','o']],g='';
+  cells.forEach(function(r){r.forEach(function(k){
+    var on=(k==='x2'&&st>=1)||(k==='o'&&st>=2)||(k==='x'&&st>=3);
+    g+='<div class="t '+(on?k:'empty')+'">'+(k==='x2'?E('س^2'):k==='x'?E('س'):'١')+'</div>';
+  });});
+  var steps='';
+  for(var i=0;i<=st;i++)steps+='<div class="step"><h3>الخطوة '+ar(i+1)+'</h3><p>'+TS[i]+'</p></div>';
+  return '<h2>الفكرة: تحليل '+E('3س^2 + 7س + 2')+' بالبطاقات</h2><p class="muted">اضغط «الخطوة التالية» لترى كيف يتكوّن المستطيل.</p>'+
+   '<div class="legend"><span><i style="background:var(--t2)"></i>'+E('س^2')+'</span><span><i style="background:var(--t1)"></i>'+E('س')+'</span><span><i style="background:var(--t0)"></i>١</span></div>'+
+   '<div class="dims"><div class="dtop" '+(st>=4?'':'hidden')+'>'+E('3س + 1')+'</div><div class="dside" '+(st>=4?'':'hidden')+'>'+E('س + 2')+'</div><div class="tiles">'+g+'</div></div>'+
+   steps+'<div class="stepbar">'+(st<4?'<button class="btn" data-act="tnext">الخطوة التالية</button>':'')+
+   (st>0?'<button class="ghost" data-act="tback">رجوع</button>':'')+dots(5,st)+'</div>';
+}
+function tryDetail(d,t){
+  if(d.bmode)return '<div class="tdetail ok"><div>'+E(t.f)+'</div><div>الحد الأوسط = '+E(t.calc)+'</div><div>✓ ب = '+E(t.mid)+' تسمح بالتحليل</div></div>';
+  return '<div class="tdetail '+(t.ok?'ok':'bad')+'"><div>'+E(t.f)+'</div><div>الحد الأوسط = '+E(t.calc)+' = '+E(t.mid)+'</div><div>'+
+   (t.ok?'✓ يساوي الحد الأوسط المطلوب '+E(d.mid)+' فالمحاولة صحيحة':'✗ لا يساوي '+E(d.mid)+' فنجرّب محاولة أخرى')+'</div></div>';
+}
+function exHTML(n){
+  var d=EX[n-1],k=S.st[n]||0,pk=(S.pk[n]===undefined?-1:S.pk[n]),h='';
+  for(var i=0;i<=k;i++){
+    var s=d.steps[i];
+    h+='<div class="step"><h3>'+ar(i+1)+'. '+s.t+'</h3><p>'+ar(s.h)+'</p>';
+    if(s.try){
+      h+='<div class="tries">'+d.tries.map(function(t,j){return '<button class="try'+(pk===j?(t.ok?' ok':' bad'):'')+'" data-act="try" data-k="'+j+'">'+E(t.f)+'</button>';}).join('')+'</div>';
+      if(pk>=0)h+=tryDetail(d,d.tries[pk]);
+    }
+    if(s.ans)h+='<div class="ans">'+E(s.ans)+'</div>';
+    h+='</div>';
+  }
+  var last=k>=d.steps.length-1;
+  var pr='';
+  if(last){
+    var p=d.prac,c=S.pr[n]===undefined?-1:S.pr[n];
+    pr='<div class="prac card"><h3>جرّب بنفسك</h3><p style="margin-bottom:10px">'+p.qh+'</p><div class="opts">'+p.o.map(function(o,j){
+      var cls='opt'+(c>=0?(j===p.c?' ok':(j===c?' bad':'')):'');
+      return '<button class="'+cls+'" data-act="prac" data-k="'+j+'"'+(c>=0?' disabled':'')+'>'+ptxt(o)+'</button>';}).join('')+'</div>'+
+      (c>=0?'<div class="why"><b>'+(c===p.c?'أحسنت! ':'الإجابة الصحيحة: ')+'</b>'+(c===p.c?'':ptxt(p.o[p.c])+'<br>')+ar(p.why)+'</div>':'')+'</div>';
+  }
+  return '<h2>'+(n===EX.length?'التحدّي':'مثال '+ar(n))+': '+d.tab+'</h2><p class="big">'+(d.bmode?'':'حلّل تحليلاً تاماً: ')+E(d.q)+'</p>'+h+
+   '<div class="stepbar">'+(last?'':'<button class="btn" data-act="enext">الخطوة التالية</button>')+(k>0?'<button class="ghost" data-act="eback">رجوع</button>':'')+dots(d.steps.length,k)+'</div>'+pr;
+}
+
+/* quiz */
+function quizHTML(){
+  if(Q.phase==='start')return contactHTML(false)+'<section class="card"><h2>الاختبار</h2><p class="muted">١٠ أسئلة من أفكار الدرس بأرقام جديدة. اكتب اسمك أولاً، فالاسم إجباري قبل البدء.</p>'+
+   '<label for="sname">اسم الطالب</label><input id="sname" type="text" autocomplete="off" value="'+attr(Q.name)+'"><p id="nerr" class="err" role="alert" hidden>اكتب اسمك (حرفان على الأقل) حتى تبدأ الاختبار.</p>'+
+   '<div class="actions"><button class="btn" data-act="qgo">ابدأ</button></div></section>';
+  if(Q.phase==='confirm')return contactHTML(false)+'<section class="card"><h2>تأكيد بدء الاختبار</h2><div class="sum"><div>الاسم: <b>'+esc(Q.name)+'</b></div><div>عدد الأسئلة: <b>١٠</b></div><div>لا يمكن الرجوع إلى سؤال بعد الانتقال منه.</div></div>'+
+   '<p>هل الاسم صحيح وتريد البدء الآن؟</p><div class="actions"><button class="btn" data-act="qstart">نعم، ابدأ الاختبار</button><button class="ghost" data-act="qedit">تعديل الاسم</button></div></section>';
+  if(Q.phase==='run'){
+    var q=QZ[Q.i],pm=Q.perm[Q.i],last=Q.i===QZ.length-1;
+    return '<section class="card"><div class="qhead"><b>'+esc(Q.name)+'</b><span>سؤال '+ar(Q.i+1)+' من '+ar(QZ.length)+'</span></div><div class="bar"><i style="width:'+Math.round(Q.i/QZ.length*100)+'%"></i></div>'+
+     '<p class="qtext">'+q.q+'</p><div class="opts">'+pm.map(function(oi,pos){return '<button class="opt'+(Q.sel===pos?' sel':'')+'" data-act="qpick" data-k="'+pos+'">'+ptxt(q.o[oi])+'</button>';}).join('')+'</div>'+
+     '<div class="actions"><button class="btn" data-act="qnext"'+(Q.sel<0?' disabled':'')+'>'+(last?'إنهاء الاختبار':'التالي')+'</button></div></section>';
+  }
+  var sc=0;Q.ans.forEach(function(a,i){if(a===QZ[i].c)sc++;});
+  var msg=sc>=9?'ممتاز!':sc>=7?'جيد جداً':sc>=5?'جيد، راجع الأخطاء':'راجع الشرح ثم أعد المحاولة';
+  var rev=QZ.map(function(q,i){var ok=Q.ans[i]===q.c;
+    return '<div class="rev '+(ok?'ok':'bad')+'"><div><b>'+ar(i+1)+'.</b> '+q.q+'</div><div>إجابتك: '+ptxt(q.o[Q.ans[i]])+(ok?' ✓':' ✗')+'</div>'+(ok?'':'<div>الصحيح: '+ptxt(q.o[q.c])+'</div>')+'<div class="muted">'+q.why+'</div></div>';}).join('');
+  return '<section class="card"><h2>نتيجة '+esc(Q.name)+'</h2><p class="score">'+ar(sc)+' من '+ar(QZ.length)+'</p><p><b>'+msg+'</b></p>'+
+   '<div class="actions"><button class="btn" data-act="qcopy">نسخ النتيجة لإرسالها للمعلمة</button><button class="ghost" data-act="qagain">إعادة الاختبار</button></div><p id="cmsg" class="okmsg" role="status"></p></section>'+
+   contactHTML(false)+'<h3 style="margin-top:20px">مراجعة الإجابات</h3>'+rev;
+}
+function score(){var s=0;Q.ans.forEach(function(a,i){if(a===QZ[i].c)s++;});return s;}
+
+/* ---------- render + events ---------- */
+var app=$('#app');
+function render(){app.innerHTML=S.view==='gate'?gateHTML():appHTML();}
+function top(){try{window.scrollTo(0,0);}catch(e){}}
+function enter(){S.view='app';render();top();}
+function login(){
+  var v=$('#pw').value,er=$('#perr');
+  if(!v.trim()){er.textContent='اكتب كلمة السر أولاً.';er.hidden=false;return;}
+  if(hashPw(v)===CFG.ph){sset('unl',CFG.ph);enter();}
+  else{er.textContent='كلمة السر غير صحيحة. تأكد منها وحاول مرة أخرى.';er.hidden=false;}
+}
+function shuffle(a){for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t;}return a;}
+function refreshTeacher(){var p=$('#tpanel');if(p&&!p.hidden)p.innerHTML=teacherPanel();}
+function buildDoc(cfg){
+  var cssEl=document.getElementById('css'),jsEl=document.getElementById('main');
+  if(!cssEl||!jsEl)throw new Error('missing');
+  var reset=':root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}';
+  var st=document.head?document.head.querySelector('style'):null;
+  if(st&&/safe-area-inset/.test(st.textContent)&&st.id!=='css')reset=st.textContent;
+  var S1='<'+'script',S2='</'+'script>';
+  var body='<title>'+TITLE+'</title><meta name="claude:viewport-fit-sides" content="cover"><style id="css">'+cssEl.textContent+'</style><div id="app" dir="rtl" lang="ar"></div>'+
+    S1+' type="application/json" id="cfg">'+JSON.stringify(cfg)+S2+S1+' id="main">'+jsEl.textContent+S2;
+  return '<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>'+reset+'</style></head><body>'+body+'</body></html>';
+}
+function saveTeacher(){
+  var a=$('#np1').value,b=$('#np2').value,m=$('#tmsg');
+  m.className='err';
+  if(toLatin(a).trim().length<4){m.textContent='اكتبي ٤ خانات على الأقل.';return;}
+  if(toLatin(a).trim()!==toLatin(b).trim()){m.textContent='الكلمتان غير متطابقتين.';return;}
+  if(!T.art){m.textContent='الحفظ غير متاح في هذا العرض.';return;}
+  var ph=hashPw(a);m.className='muted';m.textContent='جارٍ الحفظ...';
+  var doc;try{doc=buildDoc({ph:ph});}catch(e){m.className='err';m.textContent='تعذّر تجهيز الصفحة للحفظ.';return;}
+  sset('unl',ph);
+  T.art.publish(doc).then(function(){m.className='okmsg';m.textContent='تم الحفظ، وستُحدَّث الصفحة.';}).catch(function(er){
+    sdel('unl');m.className='err';
+    var c=er&&er.code;
+    m.textContent=(c==='not_writer'||c==='not_granted')?'هذا الخيار لصاحبة الصفحة فقط.':c==='conflict'?'تم تحديث الصفحة من مكان آخر، أعيدي المحاولة بعد التحميل.':c==='rate_limited'?'محاولات كثيرة، انتظري قليلاً.':'تعذّر الحفظ، حاولي مرة أخرى.';
+  });
+}
+function copyResult(){
+  var txt='الاسم: '+Q.name+' | الصف التاسع 9 | تحليل ثلاثية الحدود | الدرجة: '+ar(score())+' من '+ar(QZ.length);
+  var m=$('#cmsg');
+  function fb(){var ta=document.createElement('textarea');ta.value=txt;document.body.appendChild(ta);ta.select();var ok=false;try{ok=document.execCommand('copy');}catch(e){}ta.remove();m.textContent=ok?'تم النسخ، أرسلها للمعلمة.':txt;}
+  try{navigator.clipboard.writeText(txt).then(function(){m.textContent='تم النسخ، أرسلها للمعلمة.';},fb);}catch(e){fb();}
+}
+app.addEventListener('click',function(e){
+  var b=e.target.closest('[data-act]');if(!b)return;
+  var a=b.getAttribute('data-act'),i=+b.getAttribute('data-i'),k=+b.getAttribute('data-k');
+  switch(a){
+   case 'login':login();return;
+   case 'teacher':var p=$('#tpanel');p.hidden=!p.hidden;if(!p.hidden)p.innerHTML=teacherPanel();return;
+   case 'tsave':saveTeacher();return;
+   case 'lock':sdel('unl');S.view='gate';render();top();return;
+   case 'tab':S.tab=b.getAttribute('data-v');render();top();return;
+   case 'lesson':S.lesson=i;render();top();return;
+   case 'tnext':S.ts=Math.min(4,S.ts+1);render();return;
+   case 'tback':S.ts=Math.max(0,S.ts-1);render();return;
+   case 'enext':S.st[S.lesson]=Math.min(EX[S.lesson-1].steps.length-1,(S.st[S.lesson]||0)+1);render();return;
+   case 'eback':S.st[S.lesson]=Math.max(0,(S.st[S.lesson]||0)-1);render();return;
+   case 'try':S.pk[S.lesson]=k;render();return;
+   case 'prac':if(S.pr[S.lesson]===undefined){S.pr[S.lesson]=k;render();}return;
+   case 'qgo':var v=($('#sname').value||'').trim();if(v.length<2){$('#nerr').hidden=false;$('#sname').focus();return;}Q.name=v;Q.phase='confirm';render();top();return;
+   case 'qedit':Q.phase='start';render();return;
+   case 'qstart':Q.perm=QZ.map(function(q){return shuffle(q.o.map(function(_,j){return j;}));});Q.ans=[];Q.i=0;Q.sel=-1;Q.phase='run';render();top();return;
+   case 'qpick':Q.sel=k;render();return;
+   case 'qnext':if(Q.sel<0)return;Q.ans[Q.i]=Q.perm[Q.i][Q.sel];Q.sel=-1;if(Q.i>=QZ.length-1){Q.phase='done';}else{Q.i++;}render();top();return;
+   case 'qcopy':copyResult();return;
+   case 'qagain':Q.phase='start';render();top();return;
+  }
+});
+app.addEventListener('keydown',function(e){
+  if(e.key!=='Enter')return;
+  if(e.target.id==='pw'){e.preventDefault();login();}
+  else if(e.target.id==='sname'){e.preventDefault();var b=$('[data-act=qgo]');if(b)b.click();}
+});
+app.addEventListener('input',function(e){
+  if(e.target.id==='pw'){var er=$('#perr');if(er)er.hidden=true;}
+  if(e.target.id==='sname'){var n=$('#nerr');if(n&&e.target.value.trim().length>=2)n.hidden=true;}
+});
+
+if(sget('unl')&&sget('unl')===CFG.ph)S.view='app';
+render();
+(async function(){
+  try{
+    if(window.claude&&window.claude.use){
+      var u=await window.claude.use('user');
+      T.canEdit=u?await u.canEdit():false;
+      T.art=await window.claude.use('artifact');
+    }
+  }catch(e){}
+  T.ready=true;refreshTeacher();
+})();
+})();
+</script>
+
+</body></html>
